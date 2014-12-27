@@ -14,6 +14,7 @@
 	
 	<properties>
 		<was_home>C:/Programs/IBM/WebSphere/AppServer</was_home>
+		<db2_home>C:/Programs/IBM/SQLLIB</db2_home>
 	</properties>
 	
 	<dependencies>
@@ -43,6 +44,20 @@
             <scope>system</scope>
             <systemPath>${was_home}/runtimes/com.ibm.ws.jpa.thinclient_8.5.0.jar</systemPath>
         </dependency>
+        <dependency>
+			<groupId>com.ibm.db2.jcc</groupId>
+			<artifactId>db2jccLicense</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>${db2_home}/java/db2jcc_license_cu.jar</systemPath>
+		</dependency>
+		<dependency>
+			<groupId>com.ibm.db2.jcc</groupId>
+			<artifactId>db2jcc</artifactId>
+			<version>4.18.60</version>
+			<scope>system</scope>
+			<systemPath>${db2_home}/java/db2jcc4.jar</systemPath>
+		</dependency>
 	</dependencies>
 	
 	<build>
@@ -54,6 +69,14 @@
 				<targetPath>META-INF</targetPath>
 			</resource>
 		</resources>
+		<testResources>
+			<testResource>
+				<directory>src/test/resources</directory>
+				<includes>
+					<include>**/*.xml</include>
+				</includes>
+			</testResource>
+		</testResources>
 		<plugins>
 			<plugin>
 				<artifactId>maven-ejb-plugin</artifactId>

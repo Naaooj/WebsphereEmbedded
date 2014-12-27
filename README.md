@@ -18,39 +18,41 @@ After websphere is installed, the installation path must be configured in test-e
 
 ## How it works
 if you look at EmbeddedContainerTest class, the number of lines of codes is not that huge. Unfortunately the
-number of things to take into account is bothersome.
-First if all, Wesphere uses Openjpa, which needs to enhance entites at compile time or during runtime.
+number of things to take into account is bothersome.   
+First if all, Wesphere uses Openjpa, which needs to enhance entites at compile time or during runtime.   
 At runtime, the Openjpa java agent must be used when initializing the VM, or some openjpa settings
 must be added the the persistence.xml. Using the the java agent with eclipse is really easy, you just have
 to pass it to the VM like this : -javaagent:"C:\Users\Naoj\.m2\repository\org\apache\openjpa\openjpa\2.1.1\openjpa-2.1.1.jar".
 But when you are using maven, using the agent with surefire is really, really hard! The simplest to enhance
-entities is through the configuration. First you need to define all the entities inside the <class> tag.
+entities is through the configuration. 
+
+First you need to define all the entities inside the <class> tag.   
 Then, you need to set these two openjpa settings :
 * openjpa.jdbc.SynchronizeMappings : tels openjpa to add the entities in the context for enhancement
 * openjpa.RuntimeUnenhancedClasses : activates runtime enhencement for the defined entities
+Finally you have to define all the container preferences in your java test class, which is easy when
+you don't have a lot of beans, but it can be more complicate in a real project.
 
-## Enable tracing
+As you can see it's not that easy to use the embedded container, but it can become easier, look at 
+the next tag : extracted properties. 
+
+### Enable tracing
 If you want to activate the websphere embedded traces, simply add this to the VM arguments : -Dcom.ibm.ejs.ras.lite.traceSpecification=EJBContainer=all:MetaData=all
 
-## Common pitfalls
+### Common pitfalls
 Here is a list of all the exceptions that you may encounter during your test processes.
 
-### When you forget to use : driverType=4
-CWWJP0013E: The server cannot locate the java:comp/env/jdbc/testDB data source for the test-jpa persistence unit because it has encountered the following exception:
-com.ibm.websphere.naming.CannotInstantiateObjectException: Exception occurred while the JNDI NamingManager was processing a javax.naming.Reference object. [Root exception is com.ibm.websphere.naming.CannotInstantiateObjectException: Exception occurred while the JNDI NamingManager was processing a javax.naming.Reference object. [Root exception is javax.resource.ResourceException: Required driverType property was not specifed or is invalid. The driverType property is null]].
+#### When you forget to use : driverType=4
+`CWWJP0013E: The server cannot locate the java:comp/env/jdbc/testDB data source for the test-jpa persistence unit because it has encountered the following exception: com.ibm.websphere.naming.CannotInstantiateObjectException: Exception occurred while the JNDI NamingManager was processing a javax.naming.Reference object. [Root exception is com.ibm.websphere.naming.CannotInstantiateObjectException: Exception occurred while the JNDI NamingManager was processing a javax.naming.Reference object. [Root exception is javax.resource.ResourceException: Required driverType property was not specifed or is invalid. The driverType property is null]].`
 
-### When you do not include your jdbc driver in your classpath (as a maven dependency)
-CNTR0020E: EJB threw an unexpected (non-declared) exception during invocation of method "findById" on bean "BeanId(embeddable#classes#TestService, null)". Exception data: <openjpa-2.2.3-SNAPSHOT-r422266:1564471 fatal user error> org.apache.openjpa.persistence.ArgumentException: The persistence provider is attempting to use properties in the persistence.xml file to resolve the data source. A Java Database Connectivity (JDBC) driver or data source class name must be specified in the openjpa.ConnectionDriverName or javax.persistence.jdbc.driver property. The following properties are available in the configuration: "WsJpaJDBCConfigurationImpl@3ac78bcc: PDQ disabled: AccessIntent Task=disable". 
+#### When you do not include your jdbc driver in your classpath (as a maven dependency)
+`CNTR0020E: EJB threw an unexpected (non-declared) exception during invocation of method "findById" on bean "BeanId(embeddable#classes#TestService, null)". Exception data: <openjpa-2.2.3-SNAPSHOT-r422266:1564471 fatal user error> org.apache.openjpa.persistence.ArgumentException: The persistence provider is attempting to use properties in the persistence.xml file to resolve the data source. A Java Database Connectivity (JDBC) driver or data source class name must be specified in the openjpa.ConnectionDriverName or javax.persistence.jdbc.driver property. The following properties are available in the configuration: "WsJpaJDBCConfigurationImpl@3ac78bcc: PDQ disabled: AccessIntent Task=disable".`
 
-### When the persistence.xml file can not be found in the classpath
-CWNEN0035E: The fr.naoj.service.TestService/manager reference of type javax.persistence.EntityManager for the TestService component in the classes module of the embeddable application cannot be resolved.
-CNTR0019E: EJB threw an unexpected (non-declared) exception during invocation of method "query". Exception data: javax.ejb.EJBException: The fr.naoj.service.TestService/manager reference of type javax.persistence.EntityManager for the TestService component in the classes module of the embeddable application cannot be resolved.
+#### When the persistence.xml file can not be found in the classpath
+`CWNEN0035E: The fr.naoj.service.TestService/manager reference of type javax.persistence.EntityManager for the TestService component in the classes module of the embeddable application cannot be resolved. CNTR0019E: EJB threw an unexpected (non-declared) exception during invocation of method "findById". Exception data: javax.ejb.EJBException: The fr.naoj.service.TestService/manager reference of type javax.persistence.EntityManager for the TestService component in the classes module of the embeddable application cannot be resolved.`
 
-### When you do not map the datasource to an ejb (Bean.#classes#YourBeanName.ResourceRef.BindingName)
-CWNEN0044E: A resource reference binding could not be found for the jdbc/testDB resource reference, defined for the TestService component.
-CWNEN0011E: The injection engine failed to process bindings for the metadata due to the following error: CWNEN0044E: A resource reference binding could not be found for the following resource references [jdbc/testDB], defined for the TestService component.
-WSVR0040E: addEjbModule failed for test-ejb-0.0.1-SNAPSHOT.jar
-com.ibm.wsspi.injectionengine.InjectionException: CWNEN0044E: A resource reference binding could not be found for the following resource references [jdbc/testDB], defined for the TestService component.
+#### When you do not map the datasource to an ejb (Bean.#classes#YourBeanName.ResourceRef.BindingName)
+`CWNEN0044E: A resource reference binding could not be found for the jdbc/testDB resource reference, defined for the TestService component.CWNEN0011E: The injection engine failed to process bindings for the metadata due to the following error: CWNEN0044E: A resource reference binding could not be found for the following resource references [jdbc/testDB], defined for the TestService component.WSVR0040E: addEjbModule failed for test-ejb-0.0.1-SNAPSHOT.jar com.ibm.wsspi.injectionengine.InjectionException: CWNEN0044E: A resource reference binding could not be found for the following resource references [jdbc/testDB], defined for the TestService component.`
 
-### When you make a typo mistake in the container settings (DadaSource.ds1..., instead DataSource.ds1...) or when tha database is not started
-CNTR0020E: EJB threw an unexpected (non-declared) exception during invocation of method "findById" on bean "BeanId(embeddable#test-ejb-0.0.1-SNAPSHOT.jar#TestService, null)". Exception data: <openjpa-2.2.3-SNAPSHOT-r422266:1564471 nonfatal general error> org.apache.openjpa.persistence.PersistenceException: There were errors initializing your configuration: <openjpa-2.2.3-SNAPSHOT-r422266:1564471 fatal user error> org.apache.openjpa.util.UserException: A connection could not be obtained for driver class "null" and URL "null".  You may have specified an invalid URL.
+#### When you make a typo mistake in the container settings (DadaSource.ds1..., instead DataSource.ds1...) or when tha database is not started
+`CNTR0020E: EJB threw an unexpected (non-declared) exception during invocation of method "findById" on bean "BeanId(embeddable#test-ejb-0.0.1-SNAPSHOT.jar#TestService, null)". Exception data: <openjpa-2.2.3-SNAPSHOT-r422266:1564471 nonfatal general error> org.apache.openjpa.persistence.PersistenceException: There were errors initializing your configuration: <openjpa-2.2.3-SNAPSHOT-r422266:1564471 fatal user error> org.apache.openjpa.util.UserException: A connection could not be obtained for driver class "null" and URL "null".  You may have specified an invalid URL.`
