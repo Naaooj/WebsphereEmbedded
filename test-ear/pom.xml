@@ -1,0 +1,53 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>fr.naoj</groupId>
+		<artifactId>websphere-embedded</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	
+	<groupId>fr.naoj</groupId>
+	<artifactId>test-ear</artifactId>
+	<packaging>ear</packaging>
+	<version>0.0.1-SNAPSHOT</version>
+	
+	<dependencies>
+		<dependency>
+			<groupId>fr.naoj</groupId>
+			<artifactId>test-ejb</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<type>ejb</type>
+		</dependency>
+		<dependency>
+			<groupId>fr.naoj</groupId>
+			<artifactId>test-ws</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<type>war</type>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-ear-plugin</artifactId>
+				<version>2.8</version>
+				<configuration>
+					<earSourceDirectory>EarContent</earSourceDirectory>
+					<defaultLibBundleDir>lib</defaultLibBundleDir>
+					<version>5</version>
+					<modules>
+						<webModule>
+							<groupId>fr.naoj</groupId>
+							<artifactId>test-ws</artifactId>
+						</webModule>
+						<ejbModule>
+							<groupId>fr.naoj</groupId>
+							<artifactId>test-ejb</artifactId>
+						</ejbModule>
+					</modules>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
