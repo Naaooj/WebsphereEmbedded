@@ -12,6 +12,10 @@
 	<packaging>ejb</packaging>
 	<version>0.0.1-SNAPSHOT</version>
 	
+	<properties>
+		<was_home>C:/Programs/IBM/WebSphere/AppServer</was_home>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>fr.naoj</groupId>
@@ -24,6 +28,21 @@
 			<version>2.1.1</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<dependency>
+            <groupId>com.ibm.websphere</groupId>
+            <artifactId>embeddableContainer</artifactId>
+            <version>8.5.0</version>
+            <scope>system</scope>
+            <systemPath>${was_home}/runtimes/com.ibm.ws.ejb.embeddableContainer_8.5.0.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm.ws.jpa</groupId>
+            <artifactId>thinclient</artifactId>
+            <version>8.5.0</version>
+            <scope>system</scope>
+            <systemPath>${was_home}/runtimes/com.ibm.ws.jpa.thinclient_8.5.0.jar</systemPath>
+        </dependency>
 	</dependencies>
 	
 	<build>
