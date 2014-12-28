@@ -3,26 +3,25 @@ WebsphereEmbedded
 
 Projects aimed at testing websphere 8.5 embedded container.   
 
-There is only one test written, inside the test-ejb project. If you want the test to pass, your 
-database must at least contains one entry for the table PERSON with the id=1.
-
 This project contains tags corresponding to the various ways of using the embedded container, from
 the basic to the more complicated.
 
 If you have any trouble, do not hesitate to send me an email.
 
 ## Requirements
+There is only one test written, inside the test-ejb project. If you want the test to pass, your 
+database must at least contains one entry for the table PERSON with the id=1.   
 In order to test the embedded container, [Websphere for Developer](http://www.ibm.com/developerworks/downloads/ws/wasdevelopers/) 
 must be installed. A database server of your choice must also be present, here [DB2 Express-C](http://www-01.ibm.com/software/data/db2/express-c/download.html) is used.
 After websphere is installed, the installation path must be configured in test-ejb/pom.xml.   
 
 ## How it works
-If you look at EmbeddedContainerTest class, the number of lines of codes is not that huge, thanks
-to the embeddable.properties and to the EmbeddableContainerRunner. The runner is responsible to
-initialize the embedded container and to inject the EJB in the test class.   
-Unfortunately, you still can't use different ejb from different projects as the mapping and the 
-lookup occure only for the "module" classes, which is the current project. One way to achieve this
-is to create it's own module, look at the next tag : load-your-own-module
+Almost everything is managed by the `EmbeddableContainerRunner`. The runner is responsible to
+initialize the embedded container and to inject the EJB in the test class. By creating an `Archive`
+through an annotated method in your test classes, only the things that matter for your test can be
+added to the archive. 
+Although the behavior becomes easier, we can't still use custom data with our tests. One way to achieve this
+is by using DBUnit, look at the next tag : enhance-with-dbunit
 
 ## Things to remember   
 Wesphere uses Openjpa, which needs to enhance entites at compile time or during runtime.   
@@ -32,12 +31,11 @@ to pass it to the VM like this : -javaagent:"C:\Users\Naoj\.m2\repository\org\ap
 But when you are using maven, using the agent with surefire is really, really hard! The simplest to enhance
 entities is through the configuration. 
 
-First you need to define all the entities inside the <class> tag.   
-Then, you need to set these two openjpa settings :
+The way to avoid using the agent is to tune openjpa. First you need to define all the entities 
+inside the <class> tag in your persistence.xml test file.   
+And then you simply set these two openjpa settings :
 * openjpa.jdbc.SynchronizeMappings : tels openjpa to add the entities in the context for enhancement
 * openjpa.RuntimeUnenhancedClasses : activates runtime enhencement for the defined entities
-Finally you have to define all the container preferences in your java test class, which is easy when
-you don't have a lot of beans, but it can be more complicate in a real project.
 
 ### Enable tracing
 If you want to activate the websphere embedded traces, simply add this to the VM arguments : -Dcom.ibm.ejs.ras.lite.traceSpecification=EJBContainer=all:MetaData=all

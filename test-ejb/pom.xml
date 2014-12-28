@@ -4,13 +4,13 @@
 	<parent>
 		<groupId>fr.naoj</groupId>
 		<artifactId>websphere-embedded</artifactId>
-		<version>0.0.3-SNAPSHOT</version>
+		<version>0.0.4-SNAPSHOT</version>
 	</parent>
 
 	<groupId>fr.naoj</groupId>
 	<artifactId>test-ejb</artifactId>
 	<packaging>ejb</packaging>
-	<version>0.0.3-SNAPSHOT</version>
+	<version>0.0.4-SNAPSHOT</version>
 	
 	<properties>
 		<was_home>C:/Programs/IBM/WebSphere/AppServer</was_home>

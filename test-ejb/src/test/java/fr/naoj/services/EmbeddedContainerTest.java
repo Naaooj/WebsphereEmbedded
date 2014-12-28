@@ -8,6 +8,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import fr.naoj.embeddable.EmbeddedContainerRunner;
+import fr.naoj.embeddable.annotation.Module;
+import fr.naoj.embeddable.archive.Archive;
 import fr.naoj.entity.Person;
 
 /**
@@ -36,5 +38,12 @@ public class EmbeddedContainerTest {
 		// Search a person in the database
 		Person person = service.findById(1);
 		assertNotNull("Either you did not insert a person with id 1 or the service is not working", person);
+	}
+	
+	@Module(bindingName="jdbc/testDB")
+	public static Archive createModule() {
+		return Archive.create("test.war")
+					  .addClass(TestService.class)
+					  .addResource("test-persistence.xml", "META-INF/persistence.xml");
 	}
 }

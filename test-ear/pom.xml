@@ -4,25 +4,25 @@
 	<parent>
 		<groupId>fr.naoj</groupId>
 		<artifactId>websphere-embedded</artifactId>
-		<version>0.0.3-SNAPSHOT</version>
+		<version>0.0.4-SNAPSHOT</version>
 	</parent>
 	
 	<groupId>fr.naoj</groupId>
 	<artifactId>test-ear</artifactId>
 	<packaging>ear</packaging>
-	<version>0.0.3-SNAPSHOT</version>
+	<version>0.0.4-SNAPSHOT</version>
 	
 	<dependencies>
 		<dependency>
 			<groupId>fr.naoj</groupId>
 			<artifactId>test-ejb</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 			<type>ejb</type>
 		</dependency>
 		<dependency>
 			<groupId>fr.naoj</groupId>
 			<artifactId>test-ws</artifactId>
-			<version>0.0.3-SNAPSHOT</version>
+			<version>0.0.4-SNAPSHOT</version>
 			<type>war</type>
 		</dependency>
 	</dependencies>
