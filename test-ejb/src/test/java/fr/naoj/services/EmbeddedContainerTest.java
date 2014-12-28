@@ -30,23 +30,9 @@ public class EmbeddedContainerTest {
 		// Create the map that will contains the properties necessary to initialize the embedded container
 		Map<String, Object> properties = new HashMap<String, Object>();
 		
-		// Set the datasource definition, the name must match the one that 
-		// is defined in the persistence.xml file
-		properties.put("DataSource.ds1.name", "jdbc/testDB");
-		properties.put("DataSource.ds1.className", "com.ibm.db2.jcc.DB2DataSource");
-		properties.put("DataSource.ds1.driverType", "4");
-		properties.put("DataSource.ds1.databaseName", "TESTDB");
-		properties.put("DataSource.ds1.serverName", "localhost");
-		properties.put("DataSource.ds1.portNumber", "50000");
-		properties.put("DataSource.ds1.user", "db2admin");
-		properties.put("DataSource.ds1.password", "password");
-		
-		// Set the log folder for the embedded container transactions
-		properties.put("com.ibm.websphere.tx.tranLogDirectory", "target/tranlog");
-		
-		// Define the binding name OF EACH enterprise bean that are defined. If this property miss
-		// for only one bean, the container will not start at all
-		properties.put("Bean.#classes#TestService.ResourceRef.BindingName.jdbc/testDB", "jdbc/testDB");
+		// All the definition is contained in the embeddable.properties file, 
+		// but it can also be overrided through the map
+		properties.put("com.ibm.websphere.embeddable.configFileName", "src/test/resources/embeddable.properties");
 
 		// Try to create the container
 		EJBContainer ec = EJBContainer.createEJBContainer(properties);

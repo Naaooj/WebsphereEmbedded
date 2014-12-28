@@ -17,7 +17,8 @@ must be installed. A database server of your choice must also be present, here [
 After websphere is installed, the installation path must be configured in test-ejb/pom.xml.   
 
 ## How it works
-if you look at EmbeddedContainerTest class, the number of lines of codes is not that huge. Unfortunately the
+if you look at EmbeddedContainerTest class, the number of lines of codes is not that huge, thanks
+to the embeddable.properties file that holds the whole settings. Unfortunately the
 number of things to take into account is bothersome.   
 First if all, Wesphere uses Openjpa, which needs to enhance entites at compile time or during runtime.   
 At runtime, the Openjpa java agent must be used when initializing the VM, or some openjpa settings
@@ -34,7 +35,7 @@ Finally you have to define all the container preferences in your java test class
 you don't have a lot of beans, but it can be more complicate in a real project.
 
 As you can see it's not that easy to use the embedded container, but it can become easier, look at 
-the next tag : extracted properties. 
+the next tag : use-junit-runner. 
 
 ### Enable tracing
 If you want to activate the websphere embedded traces, simply add this to the VM arguments : -Dcom.ibm.ejs.ras.lite.traceSpecification=EJBContainer=all:MetaData=all
