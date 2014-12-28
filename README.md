@@ -17,10 +17,15 @@ must be installed. A database server of your choice must also be present, here [
 After websphere is installed, the installation path must be configured in test-ejb/pom.xml.   
 
 ## How it works
-if you look at EmbeddedContainerTest class, the number of lines of codes is not that huge, thanks
-to the embeddable.properties file that holds the whole settings. Unfortunately the
-number of things to take into account is bothersome.   
-First if all, Wesphere uses Openjpa, which needs to enhance entites at compile time or during runtime.   
+If you look at EmbeddedContainerTest class, the number of lines of codes is not that huge, thanks
+to the embeddable.properties and to the EmbeddableContainerRunner. The runner is responsible to
+initialize the embedded container and to inject the EJB in the test class.   
+Unfortunately, you still can't use different ejb from different projects as the mapping and the 
+lookup occure only for the "module" classes, which is the current project. One way to achieve this
+is to create it's own module, look at the next tag : load-your-own-module
+
+## Things to remember   
+Wesphere uses Openjpa, which needs to enhance entites at compile time or during runtime.   
 At runtime, the Openjpa java agent must be used when initializing the VM, or some openjpa settings
 must be added the the persistence.xml. Using the the java agent with eclipse is really easy, you just have
 to pass it to the VM like this : -javaagent:"C:\Users\Naoj\.m2\repository\org\apache\openjpa\openjpa\2.1.1\openjpa-2.1.1.jar".
@@ -33,9 +38,6 @@ Then, you need to set these two openjpa settings :
 * openjpa.RuntimeUnenhancedClasses : activates runtime enhencement for the defined entities
 Finally you have to define all the container preferences in your java test class, which is easy when
 you don't have a lot of beans, but it can be more complicate in a real project.
-
-As you can see it's not that easy to use the embedded container, but it can become easier, look at 
-the next tag : use-junit-runner. 
 
 ### Enable tracing
 If you want to activate the websphere embedded traces, simply add this to the VM arguments : -Dcom.ibm.ejs.ras.lite.traceSpecification=EJBContainer=all:MetaData=all

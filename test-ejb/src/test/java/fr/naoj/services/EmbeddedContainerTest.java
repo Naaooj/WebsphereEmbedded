@@ -2,13 +2,12 @@ package fr.naoj.services;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.ejb.embeddable.EJBContainer;
+import javax.ejb.EJB;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import fr.naoj.embeddable.EmbeddedContainerRunner;
 import fr.naoj.entity.Person;
 
 /**
@@ -23,23 +22,15 @@ import fr.naoj.entity.Person;
  * 
  * @author Johann Bernez
  */
+@RunWith(EmbeddedContainerRunner.class)
 public class EmbeddedContainerTest {
+	
+	@EJB
+	private TestService service;
 
 	@Test
-	public void testJavaConfiguration() throws Exception {
-		// Create the map that will contains the properties necessary to initialize the embedded container
-		Map<String, Object> properties = new HashMap<String, Object>();
-		
-		// All the definition is contained in the embeddable.properties file, 
-		// but it can also be overrided through the map
-		properties.put("com.ibm.websphere.embeddable.configFileName", "src/test/resources/embeddable.properties");
-
-		// Try to create the container
-		EJBContainer ec = EJBContainer.createEJBContainer(properties);
-		assertNotNull("The container has not been created properly, probably a mistake in the properties", ec);
-		
-		// Lookup globally to find the desired service
-		TestService service = (TestService) ec.getContext().lookup("java:global/classes/TestService");
+	public void testJunitRunner() throws Exception {
+		// The runner has normally injected the EJB
 		assertNotNull("The lookup succeed but returns a null value, check your configuration", service);
 		
 		// Search a person in the database
