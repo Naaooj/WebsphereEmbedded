@@ -4,13 +4,13 @@
 	<parent>
 		<groupId>fr.naoj</groupId>
 		<artifactId>websphere-embedded</artifactId>
-		<version>0.0.4-SNAPSHOT</version>
+		<version>0.0.5-SNAPSHOT</version>
 	</parent>
 
 	<groupId>fr.naoj</groupId>
 	<artifactId>test-jpa</artifactId>
 	<packaging>jar</packaging>
-	<version>0.0.4-SNAPSHOT</version>
+	<version>0.0.5-SNAPSHOT</version>
 	
 	<dependencies>
 		<dependency>

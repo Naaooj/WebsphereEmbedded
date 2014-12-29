@@ -5,19 +5,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import fr.naoj.embeddable.archive.Archive;
-
 /**
- * Indicates that a static method is responsible to create an {@link Archive}.
+ * Define the name of the database schema associated with the datasource of the embedded container.
  * 
  * @author Johann Bernez
  */
-@Target(ElementType.METHOD)
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Module {
-
-	/**
-	 * @return the name of the binding of a datasource
-	 */
-	String bindingName();
+public @interface Schema {
+	String value() default "";
 }

@@ -1,6 +1,6 @@
 package fr.naoj.services;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import javax.ejb.EJB;
 
@@ -8,7 +8,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import fr.naoj.embeddable.EmbeddedContainerRunner;
+import fr.naoj.embeddable.annotation.DataSetDefinition;
 import fr.naoj.embeddable.annotation.Module;
+import fr.naoj.embeddable.annotation.Schema;
 import fr.naoj.embeddable.archive.Archive;
 import fr.naoj.entity.Person;
 
@@ -24,6 +26,7 @@ import fr.naoj.entity.Person;
  * 
  * @author Johann Bernez
  */
+@Schema(value="test")
 @RunWith(EmbeddedContainerRunner.class)
 public class EmbeddedContainerTest {
 	
@@ -31,13 +34,17 @@ public class EmbeddedContainerTest {
 	private TestService service;
 
 	@Test
+	@DataSetDefinition(value="PersonDataSet.xml", delete=true)
 	public void testJunitRunner() throws Exception {
 		// The runner has normally injected the EJB
 		assertNotNull("The lookup succeed but returns a null value, check your configuration", service);
 		
-		// Search a person in the database
-		Person person = service.findById(1);
+		// Search a person in the temporary database data
+		Person person = service.findById(10);
 		assertNotNull("Either you did not insert a person with id 1 or the service is not working", person);
+		
+		// Checks the name
+		assertEquals("John", person.getFirstname());
 	}
 	
 	@Module(bindingName="jdbc/testDB")

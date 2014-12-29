@@ -1,5 +1,7 @@
 package fr.naoj.embeddable;
 
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -18,18 +20,29 @@ import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
 import javax.ejb.embeddable.EJBContainer;
+import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.sql.DataSource;
 
+import org.dbunit.database.DatabaseConfig;
+import org.dbunit.database.DatabaseConnection;
+import org.dbunit.database.IDatabaseConnection;
+import org.dbunit.dataset.DataSetException;
+import org.dbunit.dataset.IDataSet;
+import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
+import org.dbunit.operation.DatabaseOperation;
 import org.eclipse.jst.j2ee.commonarchivecore.internal.CommonarchiveFactory;
 import org.eclipse.jst.j2ee.commonarchivecore.internal.EJBJarFile;
 import org.eclipse.jst.j2ee.commonarchivecore.internal.exception.OpenFailureException;
 import org.eclipse.jst.j2ee.commonarchivecore.internal.strategy.LoadStrategy;
 import org.eclipse.jst.j2ee.ejb.EJBJar;
 import org.eclipse.jst.j2ee.ejb.EjbFactory;
+import org.junit.runner.Description;
+import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.TestClass;
 
 import com.ibm.websphere.csi.J2EENameFactory;
 import com.ibm.ws.metadata.ClassDataObject;
@@ -42,7 +55,9 @@ import com.ibm.ws.runtime.component.MetaDataMgrImpl;
 import com.ibm.ws.util.ImplFactory;
 import com.ibm.wsspi.injectionengine.ComponentNameSpaceConfiguration;
 
+import fr.naoj.embeddable.annotation.DataSetDefinition;
 import fr.naoj.embeddable.annotation.Module;
+import fr.naoj.embeddable.annotation.Schema;
 import fr.naoj.embeddable.archive.Archive;
 
 /**
@@ -55,14 +70,15 @@ public class EmbeddedContainerRunner extends BlockJUnit4ClassRunner {
 	
 	private List<Field> fields = new ArrayList<Field>();
 	private EJBContainer ec;
-	private TestClass testClass;
 	private List<EJBModule> modules;
+	private IDataSet testDataSet;
+	private IDataSet dataSet;
+	private IDatabaseConnection dbConnection;
 	
 	private static final Logger LOG = Logger.getLogger(EmbeddedContainerRunner.class.getName());
 	
 	public EmbeddedContainerRunner(Class<?> clazz) throws InitializationError {
 		super(clazz);
-		this.testClass = new TestClass(clazz);
 		
 		// Search in the test class all the field that must be injected
 		Class<?> currentClass = clazz;
@@ -94,6 +110,8 @@ public class EmbeddedContainerRunner extends BlockJUnit4ClassRunner {
 			}
 			
 			initializeContainer(bindingName, archive);
+			
+			initializeDBUnit(bindingName);
 		} else {
 			throw new InitializationError("No static method annotated with @" + Module.class.getSimpleName() + " found in class : " + clazz);
 		}
@@ -103,7 +121,41 @@ public class EmbeddedContainerRunner extends BlockJUnit4ClassRunner {
 	public void run(RunNotifier notifier) {
 		super.run(notifier);
 		if (ec != null) {
+			try {
+				if (testDataSet != null) {
+					DatabaseOperation.DELETE.execute(dbConnection, testDataSet);
+				}
+			} catch (Exception e) {
+				fail("Unable to remove the dataset");
+			}
 			ec.close();
+		}
+	}
+	
+	@Override
+	protected void runChild(FrameworkMethod method, RunNotifier notifier) {
+		boolean delete = false;
+		if (method.getAnnotation(DataSetDefinition.class) != null) {
+			DataSetDefinition def = (DataSetDefinition) method.getAnnotation(DataSetDefinition.class);
+			delete = def.delete();
+			
+			// Initialize the dataset
+			try {
+				dataSet = createDataSet(def.value());
+				DatabaseOperation.INSERT.execute(dbConnection, dataSet);
+			} catch (Exception e) {
+				notifier.fireTestFailure(new Failure(Description.createTestDescription(method.getMethod().getClass(), method.getMethod().getName()), e));
+				notifier.pleaseStop();
+			}
+		}
+		super.runChild(method, notifier);
+		
+		if (delete) {
+			try {
+				DatabaseOperation.DELETE.execute(dbConnection, dataSet);
+			} catch (Exception e) {
+				notifier.fireTestFailure(new Failure(Description.createTestDescription(method.getMethod().getClass(), method.getMethod().getName()), e));
+			}
 		}
 	}
 	
@@ -141,6 +193,35 @@ public class EmbeddedContainerRunner extends BlockJUnit4ClassRunner {
 			}
 			
 			ec = EJBContainer.createEJBContainer(properties);
+		} catch (Exception e) {
+			throw new InitializationError(Arrays.asList(new Throwable[]{e}));
+		}
+	}
+	
+	protected void initializeDBUnit(String bindingName) throws InitializationError {
+		try {
+			// Fetching the datasource, this is necessary for DBUnit unit which
+			// needs a reference to the connection
+			DataSource ds = (DataSource) new InitialContext().lookup(bindingName);
+			
+			String schemaName = "";
+			Schema schema = getTestClass().getAnnotation(Schema.class);
+			if (schema != null) {
+				schemaName = schema.value();
+			}
+			
+			if (!schemaName.isEmpty()) {
+				dbConnection = new DatabaseConnection(ds.getConnection(), schemaName);
+		    	dbConnection.getConfig().setProperty(DatabaseConfig.FEATURE_QUALIFIED_TABLE_NAMES, true);
+		    	
+		    	DataSetDefinition def = getTestClass().getAnnotation(DataSetDefinition.class);
+		    	if (def != null) {
+		    		testDataSet = createDataSet(def.value());
+		    		DatabaseOperation.INSERT.execute(dbConnection, testDataSet);
+		    	}
+			} else {
+				LOG.info("DBUnit not used, schema not defined");
+			}
 		} catch (Exception e) {
 			throw new InitializationError(Arrays.asList(new Throwable[]{e}));
 		}
@@ -218,7 +299,7 @@ public class EmbeddedContainerRunner extends BlockJUnit4ClassRunner {
 			mds.iv_Sources[MetaDataSources.sv_MetaDataManagerIndex] = factory;
 			mds.iv_Sources[MetaDataSources.sv_ModuleRefIndex] = CommonarchiveFactory.eINSTANCE.createEJBModuleRef(ejbJarFile);
 			mds.iv_Sources[MetaDataSources.sv_ApplicationNameIndex] = "embeddable";
-			mds.iv_Sources[MetaDataSources.sv_ClassLoaderIndex] = this.testClass.getJavaClass().getClassLoader();
+			mds.iv_Sources[MetaDataSources.sv_ClassLoaderIndex] = getTestClass().getJavaClass().getClassLoader();
 			mds.iv_Sources[MetaDataSources.sv_FilesIndex] = Collections.singletonList(file);
 			
 			ModuleDataObject mdo = new ModuleDataObject(((J2EENameFactory) ImplFactory.loadImplFromKey(J2EENameFactory.class)).create("embeddable", moduleName, null));
@@ -260,6 +341,19 @@ public class EmbeddedContainerRunner extends BlockJUnit4ClassRunner {
 			hasEJBJarXML = zipFile.getEntry("META-INF/ejb-jar.xml") != null;
 		}
 		return hasEJBJarXML;
+	}
+	
+	/**
+	 * Create from an xml resource in the classpath the corresponding
+	 * {@link IDataSet} if possible and if the resource is correct
+	 * (respects the DBunit dataset definition).
+	 * 
+	 * @param dataSetName the name of the xml resource
+	 * @return the {@link IDataSet} reflecting the dataSetName
+	 * @throws DataSetException if the dataSetName can not be found in the classpath
+	 */
+	private IDataSet createDataSet(String dataSetName) throws DataSetException {
+		return new FlatXmlDataSetBuilder().build(getClass().getClassLoader().getResourceAsStream(dataSetName));
 	}
 	
 	/**

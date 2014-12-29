@@ -19,9 +19,8 @@ After websphere is installed, the installation path must be configured in test-e
 Almost everything is managed by the `EmbeddableContainerRunner`. The runner is responsible to
 initialize the embedded container and to inject the EJB in the test class. By creating an `Archive`
 through an annotated method in your test classes, only the things that matter for your test can be
-added to the archive. 
-Although the behavior becomes easier, we can't still use custom data with our tests. One way to achieve this
-is by using DBUnit, look at the next tag : enhance-with-dbunit
+added to the archive. Plus, you can use `Schema` and `DataSetDefinition` within your test
+classes to use DBunit with your embedded container.
 
 ## Things to remember   
 Wesphere uses Openjpa, which needs to enhance entites at compile time or during runtime.   
